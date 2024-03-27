@@ -15,6 +15,7 @@ class News(SqlAlchemyBase, SerializerMixin):
     content = sa.Column(sa.String, nullable=True)
     created_data = sa.Column(sa.DateTime, default=datetime.datetime.now)
     is_private = sa.Column(sa.Boolean, default=True)
+    is_published = sa.Column(sa.Boolean, default=True)
     user_id = sa.Column(sa.Integer, sa.ForeignKey("user.id"))
     user = orm.relationship('User')
     categories = orm.relationship("Category",

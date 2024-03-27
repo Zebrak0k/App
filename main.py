@@ -1,17 +1,22 @@
 import datetime
+from os import abort
 
 from flask import Flask, render_template, redirect, request, make_response, session, jsonify
+from flask_restful import reqparse, abort, Api, Resource
 
 import news_api
+import news_resource
 from data import db_session
 from data.user import User
 from data.news import News
 from forms.LoginForm import LoginForm
+from forms.news import NewsForm
 from forms.user import RegisterForms
 from flask_login import LoginManager, current_user, login_required, logout_user
 from flask_login import login_user
 
 app = Flask(__name__)
+api = Api(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 app.config['SECRET_KEY'] = 'secret_key_flask'
@@ -148,12 +153,15 @@ def news_delete(id):
 def main():
     db_session.global_init("db/blog_db.sqlite")
     app.register_blueprint(news_api.blueprint)
+    api.add_resource(news_resource.NewsListResource, '/api/v2/news')
+    api.add_resource(news_resource.NewsResource, '/api/v2/news/<int:news_id>')
     app.run()
 
-@app.errorhandler(404)
-def not_found(error):
-    return make_response(jsonify({'error': 'Not found'}), 404)
-
+def abort_if_news_not_found(news_id):
+    session = db_session.create_session()
+    news = session.query(News).get(news_id)
+    if not news:
+        abort(404, message=f'News {news_id} not found')
 
 @app.errorhandler(400)
 def bad_request(error):
